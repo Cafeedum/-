@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ช่างนวย อะไหล่ซิ่ง - คลังอะไหล่มอเตอร์ไซค์</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', sans-serif; }
+        body { background-color: #f4f6f9; color: #333; display: flex; min-height: 100vh; font-size: 14px; }
+        
+        /* Sidebar สำหรับจอใหญ่ */
+        .sidebar { width: 240px; background: white; border-right: 1px solid #eee; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; overflow-y: auto; transition: 0.3s; }
+        .sidebar-logo { font-size: 20px; font-weight: 600; color: #0f294d; text-align: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+        .sidebar-logo span { color: #3264ff; }
+        
+        .user-profile-box { background: #f8f9fa; margin: 10px; padding: 12px; border-radius: 8px; border: 1px solid #eee; text-align: center; }
+        .user-profile-box .name { font-weight: 600; color: #0f294d; font-size: 13px; }
+        .user-profile-box .phone { font-size: 11px; color: #666; margin: 2px 0 6px 0; }
+        .user-profile-box .actions { font-size: 11px; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+        .user-profile-box a { color: #3264ff; text-decoration: none; cursor: pointer; font-weight: 500; }
+
+        .menu-item { padding: 12px 15px; color: #333; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-size: 13px; }
+        .menu-item:hover, .menu-item.active { background: #f0f6ff; color: #3264ff; border-right: 3px solid #3264ff; }
+        .menu-item i { width: 20px; text-align: center; font-size: 15px; color: #888; }
+        .menu-item:hover i, .menu-item.active i { color: #3264ff; }
+
+        .main-wrapper { flex: 1; margin-left: 240px; display: flex; flex-direction: column; width: calc(100% - 240px); transition: 0.3s; }
+        
+        .top-header { background: white; height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 90; gap: 10px; }
+        .mobile-menu-toggle { display: none; background: none; border: none; font-size: 20px; color: #0f294d; cursor: pointer; }
+
+        .search-bar-box { display: flex; align-items: center; background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; flex: 1; max-width: 350px; }
+        .search-bar-box input { flex: 1; padding: 8px 12px; border: none; outline: none; background: transparent; font-size: 13px; font-family: 'Prompt', sans-serif; }
+        .search-bar-box button { background: #3264ff; color: white; border: none; padding: 8px 15px; cursor: pointer; }
+
+        .cart-btn { background: #f0f6ff; color: #3264ff; border: 1px solid #b2d4ff; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+        
+        .content { padding: 20px; }
+        .banner { background: linear-gradient(135deg, #0f294d, #1a447c); color: white; padding: 25px 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+        .banner h1 { font-size: 18px; margin-bottom: 4px; }
+        .banner p { font-size: 12px; opacity: 0.9; }
+
+        .filter-bar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; }
+        .filter-btn { background: white; border: 1px solid #ddd; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; font-family: 'Prompt', sans-serif; }
+        .filter-btn.active, .filter-btn:hover { background: #3264ff; color: white; border-color: #3264ff; }
+
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
+        .product-card { background: white; border-radius: 8px; overflow: hidden; border: 1px solid #eee; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .product-img-box { width: 100%; height: 160px; background: #f8f9fa; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .product-img { width: 100%; height: 100%; object-fit: cover; }
+        .badge-cond { position: absolute; top: 8px; left: 8px; background: rgba(15, 41, 77, 0.85); color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+        
+        .product-body { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-title { font-size: 14px; font-weight: 600; color: #0f294d; margin-bottom: 2px; }
+        .product-info { font-size: 11px; color: #666; margin-bottom: 6px; }
+        .product-price { font-size: 16px; font-weight: 600; color: #ff4d4f; }
+        .product-shipping { font-size: 11px; color: #555; margin-bottom: 8px; }
+
+        .btn-action-group { display: flex; gap: 6px; }
+        .btn-cart { background: #f0f6ff; color: #3264ff; border: 1px solid #b2d4ff; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; flex: 1; font-family: 'Prompt', sans-serif; text-align: center; }
+        .btn-buy { background: #3264ff; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; flex: 1; font-family: 'Prompt', sans-serif; text-align: center; }
+        .btn-buy:hover { background: #204ecf; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 16px; font-weight: 600; color: #0f294d; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 4px; font-size: 12px; color: #555; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: 'Prompt', sans-serif; outline: none; }
+        
+        .order-summary-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #555; }
+        .summary-row.total { font-size: 15px; font-weight: 600; color: #ff4d4f; border-top: 1px solid #ddd; padding-top: 6px; margin-top: 6px; }
+
+        .qr-card { background: #f0f6ff; border: 1px solid #b2d4ff; border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 15px; }
+        .qr-card img { max-width: 140px; border-radius: 8px; border: 1px solid #ccc; background: white; padding: 5px; display: block; margin: 0 auto 8px auto; }
+        .btn-download-qr { background: #3264ff; color: white; border: none; padding: 7px 14px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; font-family: 'Prompt', sans-serif; }
+        .btn-download-qr:hover { background: #204ecf; }
+
+        .upload-box { border: 2px dashed #3264ff; background: #f8f9fa; border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; position: relative; }
+        .upload-box input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .upload-text { font-size: 11px; color: #3264ff; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+        .tab-switch { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .tab-btn { flex: 1; padding: 8px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; font-family: 'Prompt', sans-serif; text-align: center; }
+        .tab-btn.active { background: #3264ff; color: white; border-color: #3264ff; }
+
+        .floating-chat-btn { position: fixed; bottom: 20px; right: 20px; background: #3264ff; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 12px rgba(50,100,255,0.3); cursor: pointer; z-index: 500; }
+        
+        .chat-modal { display: none; position: fixed; bottom: 85px; right: 20px; width: 320px; height: 400px; background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 600; flex-direction: column; overflow: hidden; border: 1px solid #eee; }
+        .chat-header { background: #0f294d; color: white; padding: 10px 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .chat-body { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; }
+        .chat-msg { max-width: 80%; padding: 8px 10px; border-radius: 8px; font-size: 12px; word-break: break-word; }
+        .chat-msg.customer { background: #3264ff; color: white; align-self: flex-end; }
+        .chat-msg.admin { background: white; color: #333; align-self: flex-start; border: 1px solid #ddd; }
+        .chat-msg img { max-width: 100%; border-radius: 6px; margin-top: 4px; display: block; }
+        .chat-footer { padding: 8px 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 6px; align-items: center; }
+        .chat-footer input { flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 12px; }
+
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0f294d; color: white; padding: 8px 18px; border-radius: 20px; opacity: 0; transition: 0.3s; z-index: 3000; font-size: 12px; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 95; }
+
+        /* Responsive สำหรับมือถือ */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 250px; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-logo span, .user-profile-box, .menu-item span { display: inline !important; }
+            .main-wrapper { margin-left: 0; width: 100%; }
+            .mobile-menu-toggle { display: block; }
+            .search-bar-box { max-width: none; flex: 1; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .product-img-box { height: 130px; }
+            .product-body { padding: 10px; }
+            .product-title { font-size: 13px; }
+            .product-price { font-size: 15px; }
+            .btn-cart, .btn-buy { font-size: 11px; padding: 6px 4px; }
+            .chat-modal { width: 92vw; right: 4vw; bottom: 75px; height: 360px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast">แจ้งเตือน</div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+
+    <!-- เมนูด้านข้าง (รองรับมือถือแบบสไลด์เปิด-ปิด) -->
+    <aside class="sidebar" id="sidebarMenu">
+        <div class="sidebar-logo">ช่าง<span>นวย</span></div>
+        <div class="user-profile-box" id="userProfileBox">
+            <div class="name" id="profileName">ผู้เยี่ยมชม</div>
+            <div class="phone" id="profilePhone">-</div>
+            <div class="actions" id="profileActions">
+                <a onclick="openAuthModal('login')">เข้าสู่ระบบ</a> | <a onclick="openAuthModal('register')">ลงทะเบียน</a>
+            </div>
+        </div>
+
+        <button class="menu-item active" onclick="switchSidebarTab('ทั้งหมด', this); toggleMobileSidebar();"><i class="fa-solid fa-house"></i> <span>หน้าแรกทั้งหมด</span></button>
+        <button class="menu-item" onclick="switchSidebarTab('มอเตอร์ไซค์มือสอง', this); toggleMobileSidebar();"><i class="fa-solid fa-motorcycle"></i> <span>รถมอเตอร์ไซค์มือสอง</span></button>
+        <button class="menu-item" onclick="switchSidebarTab('อะไหล่มือ 1', this); toggleMobileSidebar();"><i class="fa-solid fa-gears"></i> <span>อะไหล่มือ 1</span></button>
+        <button class="menu-item" onclick="switchSidebarTab('อะไหล่มือ 2', this); toggleMobileSidebar();"><i class="fa-solid fa-wrench"></i> <span>อะไหล่มือ 2</span></button>
+        <button class="menu-item" onclick="checkChatAccess(); toggleMobileSidebar();"><i class="fa-solid fa-headset"></i> <span>ติดต่อร้านค้า</span></button>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="top-header">
+            <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <div class="search-bar-box">
+                <input type="text" id="searchInput" placeholder="ค้นหาอะไหล่, รถ..." onkeyup="filterProducts()">
+                <button onclick="filterProducts()"><i class="fa-solid fa-search"></i></button>
+            </div>
+            <button class="cart-btn" onclick="openCartModal()">
+                <i class="fa-solid fa-cart-shopping"></i> รถเข็น <span id="cartCount" style="background:#ff4d4f; color:white; padding:1px 5px; border-radius:10px; font-size:10px;">0</span>
+            </button>
+        </header>
+
+        <div class="content">
+            <div class="banner">
+                <h1>เริ่มต้นการค้นหาอะไหล่และรถมือสอง</h1>
+                <p id="bannerSub">พร้อมเพย์: 0812768242 | มั่นใจคุณภาพ จัดส่งรวดเร็ว</p>
+            </div>
+
+            <div class="filter-bar" id="subCategoryFilterBar">
+                <button class="filter-btn active" onclick="filterSubCategory('ทั้งหมด', this)">ทั้งหมด</button>
+                <button class="filter-btn" onclick="filterSubCategory('เครื่องยนต์', this)">⚙️ เครื่องยนต์</button>
+                <button class="filter-btn" onclick="filterSubCategory('ช่วงล่าง', this)">🔩 ช่วงล่าง/โช้ค</button>
+                <button class="filter-btn" onclick="filterSubCategory('ภายนอก', this)">🛵 ภายนอก/แฟริ่ง</button>
+                <button class="filter-btn" onclick="filterSubCategory('ระบบไฟ', this)">💡 ระบบไฟ</button>
+            </div>
+
+            <div style="margin-bottom:12px; font-weight:600; color:#0f294d; font-size:13px;" id="sectionTitle">รายการสินค้าทั้งหมด</div>
+
+            <div class="product-grid" id="productGrid">
+                <p style="text-align:center; color:#888; grid-column: 1/-1; padding:30px;">กำลังโหลดสินค้า...</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="floating-chat-btn" onclick="checkChatAccess()"><i class="fa-solid fa-comments"></i></div>
+
+    <div class="chat-modal" id="chatModal">
+        <div class="chat-header">
+            <span>💬 แชทสอบถามร้านช่างนวย</span>
+            <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleChatModal()"></i>
+        </div>
+        <div style="padding: 5px 8px; background:#fffbe6; border-bottom:1px solid #ffe58f; font-size:10px; color:#d46b08;">
+            แชทพูดคุยกับร้านช่างนวย
+        </div>
+        <div class="chat-body" id="customerChatMessages">
+            <div style="text-align:center; color:#888; margin-top:20px; font-size:11px;">พิมพ์ข้อความสอบถามหรือส่งรูปภาพได้เลยครับ</div>
+        </div>
+        <div class="chat-footer">
+            <label for="customerChatImg" style="cursor:pointer; color:#3264ff; font-size:15px;"><i class="fa-solid fa-image"></i></label>
+            <input type="file" id="customerChatImg" accept="image/*" style="display:none;" onchange="sendCustomerChatImage(this)">
+            <input type="text" id="customerChatInput" placeholder="พิมพ์ข้อความ..." onkeypress="handleCustomerChatKey(event)">
+            <button class="btn-buy" style="width: auto; padding: 4px 8px; font-size: 10px;" onclick="sendCustomerMessage()">ส่ง</button>
+        </div>
+    </div>
+
+    <!-- Modal เข้าสู่ระบบ / ลงทะเบียน -->
+    <div class="modal" id="authModal">
+        <div class="modal-content" style="max-width: 340px;">
+            <div class="modal-header">
+                <span id="authModalTitle">เข้าสู่ระบบ / ลงทะเบียน</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="closeAuthModal()"></i>
+            </div>
+            
+            <div class="tab-switch">
+                <button class="tab-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">เข้าสู่ระบบ</button>
+                <button class="tab-btn" id="tabRegBtn" onclick="switchAuthTab('register')">ลงทะเบียนใหม่</button>
+            </div>
+
+            <div id="formLoginPane">
+                <div class="form-group">
+                    <label>เบอร์โทรศัพท์มือถือ</label>
+                    <input type="text" id="loginPhoneInput" placeholder="0812345678" maxlength="10">
+                </div>
+                <button class="btn-buy" style="width:100%; padding:10px; margin-top:5px; font-size:13px;" onclick="processLogin()">เข้าสู่ระบบ</button>
+            </div>
+
+            <div id="formRegisterPane" style="display: none;">
+                <div class="form-group">
+                    <label>ชื่อ-นามสกุล หรือชื่อเล่น</label>
+                    <input type="text" id="regNameInput" placeholder="เช่น สมชาย ใจดี">
+                </div>
+                <div class="form-group">
+                    <label>เบอร์โทรศัพท์มือถือ</label>
+                    <input type="text" id="regPhoneInput" placeholder="0812345678" maxlength="10">
+                </div>
+                <button class="btn-buy" style="width:100%; padding:10px; margin-top:5px; font-size:13px; background:#52c41a;" onclick="processRegister()">ลงทะเบียน & เข้าสู่ระบบ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal แก้ไขข้อมูลส่วนตัว -->
+    <div class="modal" id="editProfileModal">
+        <div class="modal-content" style="max-width: 340px;">
+            <div class="modal-header">
+                <span>แก้ไขข้อมูลส่วนตัว</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="closeEditProfileModal()"></i>
+            </div>
+            <div class="form-group">
+                <label>ชื่อ-นามสกุล หรือชื่อเล่น</label>
+                <input type="text" id="editProfileNameInput" placeholder="ระบุชื่อใหม่">
+            </div>
+            <div class="form-group">
+                <label>เบอร์โทรศัพท์มือถือ</label>
+                <input type="text" id="editProfilePhoneInput" placeholder="ระบุเบอร์ใหม่" maxlength="10">
+            </div>
+            <button class="btn-buy" style="width:100%; padding:10px; margin-top:5px; font-size:13px; background:#52c41a;" onclick="saveEditedProfile()">บันทึกการเปลี่ยนแปลง</button>
+        </div>
+    </div>
+
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalTitle">รถเข็นและการสั่งซื้อ</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="closeOrderModal()"></i>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+<script>
+    const SUPABASE_URL = 'https://cxxixzsnwcippgbayaim.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4eGl4enNud2NpcHBnYmF5YWltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3OTIzNDYsImV4cCI6MjEwMzM2ODM0Nn0.F1o_abB1KCR0crAKFwlcCrSOxEfkLlAICRy9G2wTdyw';
+    
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let allProducts = [];
+    let cart = [];
+    let storeSettings = { phone: '0812768242', promptpay_phone: '0812768242', address: '-' };
+    
+    let activeCondition = 'ทั้งหมด';
+    let activeSubCategory = 'ทั้งหมด';
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('sidebarMenu');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('open');
+        overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+    }
+
+    function checkUserSession() {
+        const name = localStorage.getItem('cust_name');
+        const phone = localStorage.getItem('cust_phone');
+        const profileActions = document.getElementById('profileActions');
+        
+        if(name && phone) {
+            document.getElementById('profileName').innerText = name;
+            document.getElementById('profilePhone').innerText = phone;
+            profileActions.innerHTML = `<a onclick="openEditProfileModal()">แก้ไขข้อมูล</a> | <a onclick="logoutUser()">ออกจากระบบ</a>`;
+        } else {
+            document.getElementById('profileName').innerText = 'ผู้เยี่ยมชม';
+            document.getElementById('profilePhone').innerText = '-';
+            profileActions.innerHTML = `<a onclick="openAuthModal('login')">เข้าสู่ระบบ</a> | <a onclick="openAuthModal('register')">ลงทะเบียน</a>`;
+        }
+    }
+
+    function openAuthModal(mode = 'login') {
+        document.getElementById('authModal').style.display = 'flex';
+        switchAuthTab(mode);
+    }
+    function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
+    function openEditProfileModal() {
+        document.getElementById('editProfileNameInput').value = localStorage.getItem('cust_name') || '';
+        document.getElementById('editProfilePhoneInput').value = localStorage.getItem('cust_phone') || '';
+        document.getElementById('editProfileModal').style.display = 'flex';
+    }
+    function closeEditProfileModal() { document.getElementById('editProfileModal').style.display = 'none'; }
+
+    function saveEditedProfile() {
+        const newName = document.getElementById('editProfileNameInput').value.trim();
+        const newPhone = document.getElementById('editProfilePhoneInput').value.trim();
+        if(!newName || newPhone.length < 10) { showToast('⚠️ กรุณากรอกชื่อและเบอร์โทร 10 หลักให้ถูกต้อง'); return; }
+
+        localStorage.setItem('cust_name', newName);
+        localStorage.setItem('cust_phone', newPhone);
+        closeEditProfileModal();
+        checkUserSession();
+        showToast('✔️ อัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว');
+    }
+
+    function switchAuthTab(mode) {
+        const loginBtn = document.getElementById('tabLoginBtn');
+        const regBtn = document.getElementById('tabRegBtn');
+        const loginPane = document.getElementById('formLoginPane');
+        const regPane = document.getElementById('formRegisterPane');
+
+        if(mode === 'login') {
+            loginBtn.classList.add('active');
+            regBtn.classList.remove('active');
+            loginPane.style.display = 'block';
+            regPane.style.display = 'none';
+        } else {
+            regBtn.classList.add('active');
+            loginBtn.classList.remove('active');
+            regPane.style.display = 'block';
+            loginPane.style.display = 'none';
+        }
+    }
+
+    async function processLogin() {
+        const phone = document.getElementById('loginPhoneInput').value.trim();
+        if(phone.length < 10) { showToast('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง 10 หลัก'); return; }
+
+        showToast('⏳ กำลังตรวจสอบข้อมูล...');
+        let foundName = null;
+        const { data: ordData } = await db.from('orders').select('customer_name').eq('customer_phone', phone).limit(1);
+        if(ordData && ordData.length > 0) foundName = ordData[0].customer_name;
+
+        if(!foundName) {
+            const { data: chatData } = await db.from('chat_messages').select('customer_name').eq('customer_phone', phone).limit(1);
+            if(chatData && chatData.length > 0 && chatData[0].customer_name !== 'ลูกค้า') foundName = chatData[0].customer_name;
+        }
+
+        if(foundName) {
+            localStorage.setItem('cust_name', foundName);
+            localStorage.setItem('cust_phone', phone);
+            closeAuthModal();
+            checkUserSession();
+            showToast(`🎉 ยินดีต้อนรับกลับมาครับ คุณ${foundName}`);
+        } else {
+            showToast('⚠️ ไม่พบเบอร์นี้ในระบบ กรุณาลงทะเบียนก่อนครับ');
+            switchAuthTab('register');
+            document.getElementById('regPhoneInput').value = phone;
+        }
+    }
+
+    function processRegister() {
+        const name = document.getElementById('regNameInput').value.trim();
+        const phone = document.getElementById('regPhoneInput').value.trim();
+        if(!name || phone.length < 10) { showToast('⚠️ กรุณากรอกชื่อและเบอร์โทร 10 หลักให้ครบถ้วน'); return; }
+
+        localStorage.setItem('cust_name', name);
+        localStorage.setItem('cust_phone', phone);
+        closeAuthModal();
+        checkUserSession();
+        showToast(`🎉 ลงทะเบียนสำเร็จ ยินดีต้อนรับ คุณ${name}`);
+    }
+
+    function logoutUser() {
+        localStorage.removeItem('cust_name');
+        localStorage.removeItem('cust_phone');
+        checkUserSession();
+        showToast('✔️ ออกจากระบบเรียบร้อย');
+    }
+
+    function isLogined() {
+        const name = localStorage.getItem('cust_name');
+        const phone = localStorage.getItem('cust_phone');
+        return (name && phone);
+    }
+
+    async function loadStoreSettings() {
+        const { data } = await db.from('store_settings').select('*').eq('id', 1).single();
+        if (data) {
+            storeSettings = data;
+            document.getElementById('bannerSub').innerText = `พร้อมเพย์: ${data.promptpay_phone || '0812768242'} | มั่นใจคุณภาพ จัดส่งรวดเร็ว`;
+        }
+    }
+
+    async function loadProducts() {
+        const { data, error } = await db.from('products').select('*').order('created_at', { ascending: false });
+        if (error) {
+            document.getElementById('productGrid').innerHTML = `<p style="text-align:center; color:red; grid-column:1/-1;">เกิดข้อผิดพลาดในการโหลดสินค้า</p>`;
+            return;
+        }
+        allProducts = data || [];
+        filterAndRenderProducts();
+    }
+
+    function switchSidebarTab(cond, btn) {
+        document.querySelectorAll('.sidebar .menu-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCondition = cond;
+        document.getElementById('sectionTitle').innerText = cond === 'ทั้งหมด' ? 'รายการสินค้าทั้งหมด' : cond;
+        filterAndRenderProducts();
+    }
+
+    function filterSubCategory(sub, btn) {
+        btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeSubCategory = sub;
+        filterAndRenderProducts();
+    }
+
+    function filterProducts() {
+        filterAndRenderProducts();
+    }
+
+    function filterAndRenderProducts() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+        let filtered = allProducts;
+
+        if (activeCondition !== 'ทั้งหมด') {
+            filtered = filtered.filter(p => p.condition === activeCondition);
+        }
+        if (activeSubCategory !== 'ทั้งหมด') {
+            filtered = filtered.filter(p => (p.sub_category || 'ทั่วไป') === activeSubCategory);
+        }
+        if (keyword) {
+            filtered = filtered.filter(p => p.name.toLowerCase().includes(keyword));
+        }
+        renderProducts(filtered);
+    }
+
+    function renderProducts(products) {
+        const grid = document.getElementById('productGrid');
+        if (products.length === 0) {
+            grid.innerHTML = `<p style="text-align:center; color:#888; grid-column: 1/-1; padding:30px;">ไม่พบสินค้าในหมวดหมู่นี้</p>`;
+            return;
+        }
+
+        grid.innerHTML = '';
+        products.forEach(p => {
+            let imgTag = `<div style="color:#ccc; font-size:20px;"><i class="fa-solid fa-image"></i></div>`;
+            if (p.image_url) {
+                const firstImg = p.image_url.split(',')[0].trim();
+                imgTag = `<img src="${firstImg}" class="product-img" alt="${p.name}">`;
+            }
+
+            const isOutOfStock = p.stock <= 0;
+            const shippingCost = p.shipping_cost !== undefined ? p.shipping_cost : 50;
+
+            grid.innerHTML += `
+                <div class="product-card">
+                    <div class="product-img-box">
+                        <span class="badge-cond">${p.condition || 'มือ 1'}</span>
+                        ${imgTag}
+                    </div>
+                    <div class="product-body">
+                        <div>
+                            <div class="product-title">${p.name}</div>
+                            <div class="product-info">${p.condition || 'มือ 1'} | ${p.sub_category || 'ทั่วไป'}</div>
+                            <div class="product-price">฿${p.price.toLocaleString()}</div>
+                            <div class="product-shipping">📦 ค่าส่ง: ฿${shippingCost.toLocaleString()}</div>
+                            <div style="font-size:10px; color:${isOutOfStock ? '#ff4d4f' : '#52c41a'}; margin-bottom:6px; font-weight:500;">
+                                ${isOutOfStock ? '❌ สินค้าหมด' : `✔️ เหลือ: ${p.stock} ชิ้น`}
+                            </div>
+                        </div>
+                        <div class="btn-action-group">
+                            <button class="btn-cart" onclick="addToCart('${p.id}')" ${isOutOfStock ? 'disabled' : ''}><i class="fa-solid fa-cart-plus"></i> รถเข็น</button>
+                            <button class="btn-buy" onclick="buyNow('${p.id}')" ${isOutOfStock ? 'disabled' : ''}>ซื้อเลย</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function addToCart(productId) {
+        if(!isLogined()) {
+            showToast('⚠️ กรุณาเข้าสู่ระบบหรือลงทะเบียนก่อนครับ');
+            openAuthModal('login');
+            return;
+        }
+        const prod = allProducts.find(x => x.id === productId);
+        if(!prod) return;
+        const exist = cart.find(x => x.id === productId);
+        if(exist) {
+            if(exist.qty < prod.stock) exist.qty++;
+            else { showToast('⚠️ สินค้าในสต็อกไม่พอ'); return; }
+        } else {
+            cart.push({ ...prod, qty: 1 });
+        }
+        updateCartCount();
+        showToast(`🛒 เพิ่มลงรถเข็นแล้ว`);
+    }
+
+    function updateCartCount() {
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        document.getElementById('cartCount').innerText = totalQty;
+    }
+
+    function openCartModal() {
+        if(!isLogined()) {
+            showToast('⚠️ กรุณาเข้าสู่ระบบก่อนเปิดรถเข็นครับ');
+            openAuthModal('login');
+            return;
+        }
+
+        const modalBody = document.getElementById('modalBody');
+        document.getElementById('modalTitle').innerText = 'รถเข็นและการสั่งซื้อ';
+        
+        if(cart.length === 0) {
+            modalBody.innerHTML = `<p style="text-align:center; color:#888; padding:20px;">🛒 รถเข็นของคุณยังว่างอยู่</p>`;
+            document.getElementById('orderModal').style.display = 'flex';
+            return;
+        }
+
+        let totalGoodsPrice = 0;
+        let totalShippingPrice = 0;
+        let itemsHtml = '';
+
+        cart.forEach((item, index) => {
+            const ship = item.shipping_cost !== undefined ? item.shipping_cost : 50;
+            totalGoodsPrice += (item.price * item.qty);
+            totalShippingPrice += (ship * item.qty);
+
+            itemsHtml += `
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:6px 0; font-size:11px;">
+                    <div><b>${item.name}</b><br>฿${item.price.toLocaleString()} x ${item.qty} (ค่าส่ง: ฿${ship})</div>
+                    <div>
+                        <button onclick="changeCartQty(${index}, 1)" style="padding:1px 5px;">+</button>
+                        <span style="margin:0 4px;">${item.qty}</span>
+                        <button onclick="changeCartQty(${index}, -1)" style="padding:1px 5px;">-</button>
+                    </div>
+                </div>`;
+        });
+
+        const grandTotal = totalGoodsPrice + totalShippingPrice;
+        const promptpayNo = storeSettings.promptpay_phone || '0812768242';
+        const qrUrl = `https://promptpay.io/${promptpayNo}/${grandTotal}.png`;
+        const savedName = localStorage.getItem('cust_name') || '';
+        const savedPhone = localStorage.getItem('cust_phone') || '';
+
+        modalBody.innerHTML = `
+            <div style="max-height:140px; overflow-y:auto; margin-bottom:10px;">${itemsHtml}</div>
+            <div class="order-summary-box">
+                <div class="summary-row"><span>ราคารวมสินค้า:</span><span>฿${totalGoodsPrice.toLocaleString()}</span></div>
+                <div class="summary-row"><span>ค่าจัดส่งรวม:</span><span>฿${totalShippingPrice.toLocaleString()}</span></div>
+                <div class="summary-row total"><span>ยอดโอนรวมสุทธิ:</span><span>฿${grandTotal.toLocaleString()}</span></div>
+            </div>
+
+            <div class="qr-card">
+                <p style="font-size:11px; font-weight:600; color:#0f294d; margin-bottom:6px;"><i class="fa-solid fa-qrcode"></i> สแกน QR Code พร้อมเพย์</p>
+                <img src="${qrUrl}" alt="QR PromptPay">
+                <a href="${qrUrl}" download="promptpay_qr_${grandTotal}.png" target="_blank" class="btn-download-qr">
+                    <i class="fa-solid fa-download"></i> ดาวน์โหลด QR โค้ด
+                </a>
+                <p style="font-size:10px; color:#555; margin-top:6px;">พร้อมเพย์: <b>${promptpayNo}</b></p>
+            </div>
+
+            <div class="form-group"><label>ชื่อ-นามสกุล ผู้รับ</label><input type="text" id="custName" value="${savedName}" readonly style="background:#f8f9fa;"></div>
+            <div class="form-group"><label>เบอร์โทรศัพท์ติดต่อ</label><input type="text" id="custPhone" value="${savedPhone}" readonly style="background:#f8f9fa;"></div>
+            <div class="form-group"><label>ที่อยู่จัดส่งพัสดุ</label><textarea id="custAddress" rows="2" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea></div>
+            
+            <div class="form-group">
+                <label>แนบสลิปหลักฐานการโอนเงิน</label>
+                <div class="upload-box" id="uploadBoxContainer">
+                    <input type="file" id="custSlip" accept="image/*" onchange="previewSlipName(this)">
+                    <div class="upload-text" id="uploadLabelText">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> คลิกเลือกรูปสลิปโอนเงิน
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-buy" style="width:100%; margin-top:8px; padding:10px; background:#52c41a; font-size:14px; font-weight:600;" onclick="submitCartOrder(${grandTotal})">
+                <i class="fa-solid fa-check-circle"></i> ยืนยันการสั่งซื้อ
+            </button>
+        `;
+        document.getElementById('orderModal').style.display = 'flex';
+    }
+
+    function previewSlipName(input) {
+        const labelText = document.getElementById('uploadLabelText');
+        const boxContainer = document.getElementById('uploadBoxContainer');
+        if (input.files && input.files[0]) {
+            labelText.innerHTML = `<i class="fa-solid fa-file-image" style="color:#52c41a;"></i> เลือกไฟล์แล้ว: ${input.files[0].name}`;
+            boxContainer.style.borderColor = '#52c41a';
+            boxContainer.style.background = '#f6ffed';
+        }
+    }
+
+    function changeCartQty(index, delta) {
+        cart[index].qty += delta;
+        if(cart[index].qty <= 0) cart.splice(index, 1);
+        updateCartCount();
+        openCartModal();
+    }
+
+    function buyNow(productId) {
+        if(!isLogined()) {
+            showToast('⚠️ กรุณาเข้าสู่ระบบก่อนซื้อครับ');
+            openAuthModal('login');
+            return;
+        }
+        cart = [];
+        const prod = allProducts.find(x => x.id === productId);
+        if(prod) cart.push({ ...prod, qty: 1 });
+        updateCartCount();
+        openCartModal();
+    }
+
+    function closeOrderModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+    async function submitCartOrder(grandTotal) {
+        const name = localStorage.getItem('cust_name');
+        const phone = localStorage.getItem('cust_phone');
+        const address = document.getElementById('custAddress').value.trim();
+        const slipInput = document.getElementById('custSlip');
+
+        if(!address) { showToast('⚠️ กรุณากรอกที่อยู่จัดส่งพัสดุครับ'); return; }
+        if(slipInput.files.length === 0) { showToast('⚠️ กรุณาแนบสลิปหลักฐานการโอนเงิน'); return; }
+
+        showToast('⏳ กำลังบันทึกออเดอร์...');
+        try {
+            const file = slipInput.files[0];
+            const fileName = `slip_${Date.now()}.${file.name.split('.').pop()}`;
+            const { error: upErr } = await db.storage.from('product-images').upload(fileName, file);
+            if(upErr) throw upErr;
+            const { data: urlData } = db.storage.from('product-images').getPublicUrl(fileName);
+
+            const { error: ordErr } = await db.from('orders').insert([{
+                customer_name: name,
+                customer_phone: phone,
+                address: address,
+                total_price: grandTotal,
+                payment_method: 'PromptPay โอนเงิน',
+                payment_status: 'ชำระเงินแล้ว (แนบสลิป)',
+                slip_url: urlData.publicUrl,
+                status: 'รอตรวจสอบ'
+            }]);
+            if(ordErr) throw ordErr;
+
+            for(let item of cart) {
+                const newStock = Math.max(0, item.stock - item.qty);
+                await db.from('products').update({ stock: newStock }).eq('id', item.id);
+                
+                const cost = item.cost_price || 0;
+                await db.from('sales_history').insert([{
+                    product_name: `${item.name} (x${item.qty})`,
+                    quantity: item.qty,
+                    buy_price: cost,
+                    sell_price: item.price,
+                    total_profit: (item.price - cost) * item.qty
+                }]);
+            }
+
+            showToast('🎉 สั่งซื้อสินค้าสำเร็จ!');
+            cart = [];
+            updateCartCount();
+            closeOrderModal();
+            loadProducts();
+        } catch(err) {
+            showToast('⚠️ เกิดข้อผิดพลาด: ' + err.message);
+        }
+    }
+
+    function checkChatAccess() {
+        if(!isLogined()) {
+            showToast('⚠️ กรุณาเข้าสู่ระบบก่อนใช้งานแชทครับ');
+            openAuthModal('login');
+            return;
+        }
+        toggleChatModal();
+    }
+
+    function toggleChatModal() {
+        const m = document.getElementById('chatModal');
+        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        if(m.style.display === 'flex') {
+            const p = localStorage.getItem('cust_phone');
+            if(p) { loadCustomerMessages(p); initCustomerRealtime(p); }
+        }
+    }
+
+    async function loadCustomerMessages(phone) {
+        const msgDiv = document.getElementById('customerChatMessages');
+        const { data } = await db.from('chat_messages').select('*').eq('customer_phone', phone).order('created_at', { ascending: true });
+        if(!data) return;
+        msgDiv.innerHTML = data.length === 0 ? `<div style="text-align:center; color:#888; margin-top:15px; font-size:11px;">พิมพ์ข้อความสอบถามได้เลยครับ</div>` : '';
+        data.forEach(m => {
+            const isCust = m.sender === 'customer';
+            msgDiv.innerHTML += `<div class="chat-msg ${isCust ? 'customer' : 'admin'}">${m.message || ''}${m.image_url ? `<img src="${m.image_url}">` : ''}</div>`;
+        });
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+    }
+
+    async function sendCustomerMessage() {
+        const name = localStorage.getItem('cust_name');
+        const phone = localStorage.getItem('cust_phone');
+        const text = document.getElementById('customerChatInput').value.trim();
+        if(!text) return;
+        document.getElementById('customerChatInput').value = '';
+
+        await db.from('chat_messages').insert([{ customer_phone: phone, customer_name: name, sender: 'customer', message: text }]);
+        loadCustomerMessages(phone);
+    }
+
+    async function sendCustomerChatImage(input) {
+        const name = localStorage.getItem('cust_name');
+        const phone = localStorage.getItem('cust_phone');
+        if(input.files.length === 0) return;
+        const file = input.files[0];
+        const fileName = `chat_${Date.now()}.${file.name.split('.').pop()}`;
+        const { error: upErr } = await db.storage.from('product-images').upload(fileName, file);
+        if(upErr) return;
+        const { data: urlD } = db.storage.from('product-images').getPublicUrl(fileName);
+
+        await db.from('chat_messages').insert([{ customer_phone: phone, customer_name: name, sender: 'customer', message: '[ส่งรูปภาพ]', image_url: urlD.publicUrl }]);
+        loadCustomerMessages(phone);
+        input.value = '';
+    }
+
+    function handleCustomerChatKey(e) { if(e.key === 'Enter') sendCustomerMessage(); }
+    
+    function initCustomerRealtime(phone) {
+        db.channel('cust-chat-' + phone).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `customer_phone=eq.${phone}` }, () => { loadCustomerMessages(phone); }).subscribe();
+    }
+
+    checkUserSession();
+    loadStoreSettings();
+    loadProducts();
+</script>
+</body>
+</html>

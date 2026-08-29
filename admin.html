@@ -18,6 +18,11 @@
         .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .card-title { font-size: 16px; font-weight: 600; color: #0f294d; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
         
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .stat-card .title { font-size: 13px; color: #666; margin-bottom: 5px; }
+        .stat-card .value { font-size: 22px; font-weight: 600; color: #0f294d; }
+
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-size: 12px; color: #555; font-weight: 500; }
         .form-group input, .form-group select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: 'Prompt', sans-serif; outline: none; }
@@ -50,6 +55,22 @@
 
     <div class="container">
         <h1><i class="fa-solid fa-gauge-high"></i> ระบบหลังบ้าน - ช่างนวย อะไหล่ซิ่ง</h1>
+
+        <!-- สรุปยอดขาย & กำไร -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="title">ยอดขายรวมทั้งหมด</div>
+                <div class="value" id="totalSalesTxt">฿0</div>
+            </div>
+            <div class="stat-card">
+                <div class="title">กำไรสุทธิรวม</div>
+                <div class="value" id="totalProfitTxt" style="color: #52c41a;">฿0</div>
+            </div>
+            <div class="stat-card">
+                <div class="title">จำนวนสินค้าที่ขายได้</div>
+                <div class="value" id="totalQtyTxt">0 ชิ้น</div>
+            </div>
+        </div>
 
         <!-- ฟอร์มเพิ่ม / แก้ไขสินค้า -->
         <div class="card">
@@ -158,6 +179,28 @@
                 </table>
             </div>
         </div>
+
+        <!-- ประวัติการขาย & กำไร -->
+        <div class="card">
+            <div class="card-title"><i class="fa-solid fa-chart-line"></i> ประวัติการขาย & คำนวณกำไร</div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วันที่ขาย</th>
+                            <th>รายการสินค้า</th>
+                            <th>จำนวน</th>
+                            <th>ทุนรวม</th>
+                            <th>ขายรวม</th>
+                            <th>กำไรสุทธิ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminSalesTable">
+                        <tr><td colspan="6" style="text-align:center; color:#888;">กำลังโหลดประวัติการขาย...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
 <script>
@@ -169,6 +212,7 @@
 
     let adminProducts = [];
     let adminOrders = [];
+    let adminSales = [];
 
     function showToast(msg) {
         const t = document.getElementById('toast');
@@ -187,6 +231,11 @@
         const { data: ordData } = await db.from('orders').select('*').order('created_at', { ascending: false });
         adminOrders = ordData || [];
         renderOrdersTable();
+
+        // โหลดประวัติการขาย
+        const { data: salesData } = await db.from('sales_history').select('*').order('created_at', { ascending: false });
+        adminSales = salesData || [];
+        renderSalesTable();
     }
 
     async function saveProduct() {
@@ -208,7 +257,6 @@
         showToast('⏳ กำลังบันทึกข้อมูล...');
         try {
             let imageUrl = null;
-            // ถ้ามีการเลือกรูปใหม่
             if(fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 const fileName = `prod_${Date.now()}.${file.name.split('.').pop()}`;
@@ -219,7 +267,6 @@
             }
 
             if(editId) {
-                // โหมดแก้ไขสินค้าเดิม
                 let updatePayload = {
                     name: name,
                     condition: condition,
@@ -236,7 +283,6 @@
                 showToast('✔️ แก้ไขสินค้าสำเร็จ!');
                 cancelEditMode();
             } else {
-                // โหมดเพิ่มสินค้าใหม่
                 if(!imageUrl) {
                     showToast('⚠️ กรุณาเลือกรูปภาพสินค้า');
                     return;
@@ -381,6 +427,48 @@
                     </td>
                 </tr>`;
         });
+    }
+
+    function renderSalesTable() {
+        const tbody = document.getElementById('adminSalesTable');
+        let totalSales = 0;
+        let totalProfit = 0;
+        let totalQty = 0;
+
+        if(adminSales.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">ยังไม่มีประวัติการขาย</td></tr>`;
+            document.getElementById('totalSalesTxt').innerText = '฿0';
+            document.getElementById('totalProfitTxt').innerText = '฿0';
+            document.getElementById('totalQtyTxt').innerText = '0 ชิ้น';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        adminSales.forEach(s => {
+            const dateStr = new Date(s.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+            const qty = s.quantity || 1;
+            const buyTotal = (s.buy_price || 0) * qty;
+            const sellTotal = (s.sell_price || 0) * qty;
+            const profit = s.total_profit || (sellTotal - buyTotal);
+
+            totalSales += sellTotal;
+            totalProfit += profit;
+            totalQty += qty;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${dateStr}</td>
+                    <td><b>${s.product_name}</b></td>
+                    <td>${qty}</td>
+                    <td>฿${buyTotal.toLocaleString()}</td>
+                    <td style="color:#ff4d4f; font-weight:600;">฿${sellTotal.toLocaleString()}</td>
+                    <td style="color:#52c41a; font-weight:600;">฿${profit.toLocaleString()}</td>
+                </tr>`;
+        });
+
+        document.getElementById('totalSalesTxt').innerText = `฿${totalSales.toLocaleString()}`;
+        document.getElementById('totalProfitTxt').innerText = `฿${totalProfit.toLocaleString()}`;
+        document.getElementById('totalQtyTxt').innerText = `${totalQty.toLocaleString()} ชิ้น`;
     }
 
     async function deleteOrder(id) {

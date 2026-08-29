@@ -326,7 +326,6 @@
         const newPhone = document.getElementById('editProfilePhoneInput').value.trim();
         if(!newName || newPhone.length < 10) { showToast('⚠️ กรุณากรอกชื่อและเบอร์โทร 10 หลักให้ถูกต้อง'); return; }
 
-        // อัปเดตลงตาราง customers ใน Supabase ด้วย
         await db.from('customers').upsert([{ phone: newPhone, name: newName }], { onConflict: 'phone' });
 
         localStorage.setItem('cust_name', newName);
@@ -355,7 +354,6 @@
         }
     }
 
-    // แก้ไขระบบ Login ให้ดึงข้อมูลจากตาราง customers ใน Supabase โดยตรง
     async function processLogin() {
         const phone = document.getElementById('loginPhoneInput').value.trim();
         if(phone.length < 10) { showToast('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง 10 หลัก'); return; }
@@ -377,7 +375,6 @@
         }
     }
 
-    // แก้ไขระบบ Register ให้บันทึกลงตาราง customers ใน Supabase
     async function processRegister() {
         const name = document.getElementById('regNameInput').value.trim();
         const phone = document.getElementById('regPhoneInput').value.trim();

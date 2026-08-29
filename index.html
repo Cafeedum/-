@@ -91,16 +91,6 @@
 
         .floating-chat-btn { position: fixed; bottom: 20px; right: 20px; background: #3264ff; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 12px rgba(50,100,255,0.3); cursor: pointer; z-index: 500; }
         
-        .chat-modal { display: none; position: fixed; bottom: 85px; right: 20px; width: 320px; height: 400px; background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 600; flex-direction: column; overflow: hidden; border: 1px solid #eee; }
-        .chat-header { background: #0f294d; color: white; padding: 10px 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .chat-body { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f8f9fa; }
-        .chat-msg { max-width: 80%; padding: 8px 10px; border-radius: 8px; font-size: 12px; word-break: break-word; }
-        .chat-msg.customer { background: #3264ff; color: white; align-self: flex-end; }
-        .chat-msg.admin { background: white; color: #333; align-self: flex-start; border: 1px solid #ddd; }
-        .chat-msg img { max-width: 100%; border-radius: 6px; margin-top: 4px; display: block; }
-        .chat-footer { padding: 8px 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 6px; align-items: center; }
-        .chat-footer input { flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 12px; }
-
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0f294d; color: white; padding: 8px 18px; border-radius: 20px; opacity: 0; transition: 0.3s; z-index: 3000; font-size: 12px; }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
@@ -121,7 +111,6 @@
             .btn-cart, .btn-buy { font-size: 11px; padding: 6px 4px; }
             
             .floating-chat-btn { bottom: 75px; right: 15px; width: 45px; height: 45px; font-size: 20px; }
-            .chat-modal { width: 92vw; right: 4vw; bottom: 130px; height: 350px; }
         }
     </style>
 </head>
@@ -144,7 +133,7 @@
         <button class="menu-item" onclick="switchSidebarTab('มอเตอร์ไซค์มือสอง', this); toggleMobileSidebar();"><i class="fa-solid fa-motorcycle"></i> <span>รถมอเตอร์ไซค์มือสอง</span></button>
         <button class="menu-item" onclick="switchSidebarTab('อะไหล่มือ 1', this); toggleMobileSidebar();"><i class="fa-solid fa-gears"></i> <span>อะไหล่มือ 1</span></button>
         <button class="menu-item" onclick="switchSidebarTab('อะไหล่มือ 2', this); toggleMobileSidebar();"><i class="fa-solid fa-wrench"></i> <span>อะไหล่มือ 2</span></button>
-        <button class="menu-item" onclick="checkChatAccess(); toggleMobileSidebar();"><i class="fa-solid fa-headset"></i> <span>ติดต่อร้านค้า</span></button>
+        <button class="menu-item" onclick="openContactModal(); toggleMobileSidebar();"><i class="fa-solid fa-headset"></i> <span>ติดต่อร้านค้า</span></button>
     </aside>
 
     <main class="main-wrapper">
@@ -181,24 +170,38 @@
         </div>
     </main>
 
-    <div class="floating-chat-btn" onclick="checkChatAccess()"><i class="fa-solid fa-comments"></i></div>
+    <div class="floating-chat-btn" onclick="openContactModal()" title="ติดต่อร้านค้า"><i class="fa-solid fa-headset"></i></div>
 
-    <div class="chat-modal" id="chatModal">
-        <div class="chat-header">
-            <span>💬 แชทสอบถามร้านช่างนวย</span>
-            <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="toggleChatModal()"></i>
-        </div>
-        <div style="padding: 5px 8px; background:#fffbe6; border-bottom:1px solid #ffe58f; font-size:10px; color:#d46b08;">
-            แชทพูดคุยกับร้านช่างนวย
-        </div>
-        <div class="chat-body" id="customerChatMessages">
-            <div style="text-align:center; color:#888; margin-top:20px; font-size:11px;">พิมพ์ข้อความสอบถามหรือส่งรูปภาพได้เลยครับ</div>
-        </div>
-        <div class="chat-footer">
-            <label for="customerChatImg" style="cursor:pointer; color:#3264ff; font-size:15px;"><i class="fa-solid fa-image"></i></label>
-            <input type="file" id="customerChatImg" accept="image/*" style="display:none;" onchange="sendCustomerChatImage(this)">
-            <input type="text" id="customerChatInput" placeholder="พิมพ์ข้อความ..." onkeypress="handleCustomerChatKey(event)">
-            <button class="btn-buy" style="width: auto; padding: 4px 8px; font-size: 10px;" onclick="sendCustomerMessage()">ส่ง</button>
+    <!-- Modal สำหรับแสดงข้อมูลติดต่อร้านค้า (ดึงจากตั้งค่า Admin) -->
+    <div class="modal" id="contactModal">
+        <div class="modal-content" style="max-width: 350px;">
+            <div class="modal-header">
+                <span><i class="fa-solid fa-store" style="color:#3264ff;"></i> ข้อมูลติดต่อร้านค้า</span>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="closeContactModal()"></i>
+            </div>
+            <div style="font-size:13px; color:#333; display:flex; flex-direction:column; gap:12px; padding:5px 0;">
+                <div style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                    <div style="color:#888; font-size:11px; margin-bottom:2px;">📞 เบอร์โทรศัพท์ติดต่อ</div>
+                    <div style="font-weight:600; color:#0f294d;" id="infoStorePhone">-</div>
+                </div>
+                <div style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                    <div style="color:#888; font-size:11px; margin-bottom:2px;">💳 พร้อมเพย์ (โอนเงิน)</div>
+                    <div style="font-weight:600; color:#52c41a;" id="infoStorePromptPay">-</div>
+                </div>
+                <div style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                    <div style="color:#888; font-size:11px; margin-bottom:2px;">💬 LINE ID</div>
+                    <div style="font-weight:600; color:#0f294d;" id="infoStoreLine">-</div>
+                </div>
+                <div style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                    <div style="color:#888; font-size:11px; margin-bottom:2px;">📘 Facebook เพจ</div>
+                    <div style="font-weight:600; color:#3264ff;" id="infoStoreFacebook">-</div>
+                </div>
+                <div style="background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                    <div style="color:#888; font-size:11px; margin-bottom:2px;">📍 ที่อยู่ร้านค้า</div>
+                    <div style="font-weight:500; color:#333;" id="infoStoreAddress">-</div>
+                </div>
+            </div>
+            <button class="btn-buy" style="width:100%; margin-top:10px; padding:10px;" onclick="closeContactModal()">ปิดหน้าต่าง</button>
         </div>
     </div>
 
@@ -273,7 +276,7 @@
 
     let allProducts = [];
     let cart = [];
-    let storeSettings = { phone: '0812768242', promptpay_phone: '0812768242', address: '-' };
+    let storeSettings = { phone: '0812768242', promptpay_phone: '0812768242', line_id: '-', facebook: '-', address: '-' };
     
     let activeCondition = 'ทั้งหมด';
     let activeSubCategory = 'ทั้งหมด';
@@ -359,7 +362,6 @@
         if(phone.length < 10) { showToast('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง 10 หลัก'); return; }
 
         showToast('⏳ กำลังตรวจสอบข้อมูล...');
-        
         const { data, error } = await db.from('customers').select('*').eq('phone', phone).single();
 
         if(data) {
@@ -381,15 +383,9 @@
         if(!name || phone.length < 10) { showToast('⚠️ กรุณากรอกชื่อและเบอร์โทร 10 หลักให้ครบถ้วน'); return; }
 
         showToast('⏳ กำลังบันทึกข้อมูลการลงทะเบียน...');
+        const { error } = await db.from('customers').upsert([{ phone: phone, name: name }], { onConflict: 'phone' });
 
-        const { error } = await db.from('customers').upsert([
-            { phone: phone, name: name }
-        ], { onConflict: 'phone' });
-
-        if(error) {
-            showToast('⚠️ เกิดข้อผิดพลาด: ' + error.message);
-            return;
-        }
+        if(error) { showToast('⚠️ เกิดข้อผิดพลาด: ' + error.message); return; }
 
         localStorage.setItem('cust_name', name);
         localStorage.setItem('cust_phone', phone);
@@ -660,7 +656,7 @@
             if(upErr) throw upErr;
             const { data: urlData } = db.storage.from('product-images').getPublicUrl(fileName);
 
-            const { error: ordErr } = await db.from('orders').insert([{
+            const { error: ordErr } = await db.orders.insert([{
                 customer_name: name,
                 customer_phone: phone,
                 address: address,
@@ -696,66 +692,20 @@
         }
     }
 
-    function checkChatAccess() {
-        if(!isLogined()) {
-            showToast('⚠️ กรุณาเข้าสู่ระบบก่อนใช้งานแชทครับ');
-            openAuthModal('login');
-            return;
-        }
-        toggleChatModal();
+    // ฟังก์ชันเปิด-ปิด หน้าต่างข้อมูลติดต่อร้านค้า (ดึงจากตั้งค่า Admin)
+    async function openContactModal() {
+        await loadStoreSettings();
+        document.getElementById('infoStorePhone').innerText = storeSettings.phone || '0812768242';
+        document.getElementById('infoStorePromptPay').innerText = storeSettings.promptpay_phone || '0812768242';
+        document.getElementById('infoStoreLine').innerText = storeSettings.line_id || '-';
+        document.getElementById('infoStoreFacebook').innerText = storeSettings.facebook || '-';
+        document.getElementById('infoStoreAddress').innerText = storeSettings.address || '-';
+        
+        document.getElementById('contactModal').style.display = 'flex';
     }
 
-    function toggleChatModal() {
-        const m = document.getElementById('chatModal');
-        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-        if(m.style.display === 'flex') {
-            const p = localStorage.getItem('cust_phone');
-            if(p) { loadCustomerMessages(p); initCustomerRealtime(p); }
-        }
-    }
-
-    async function loadCustomerMessages(phone) {
-        const msgDiv = document.getElementById('customerChatMessages');
-        const { data } = await db.from('chat_messages').select('*').eq('customer_phone', phone).order('created_at', { ascending: true });
-        if(!data) return;
-        msgDiv.innerHTML = data.length === 0 ? `<div style="text-align:center; color:#888; margin-top:15px; font-size:11px;">พิมพ์ข้อความสอบถามได้เลยครับ</div>` : '';
-        data.forEach(m => {
-            const isCust = m.sender === 'customer';
-            msgDiv.innerHTML += `<div class="chat-msg ${isCust ? 'customer' : 'admin'}">${m.message || ''}${m.image_url ? `<img src="${m.image_url}">` : ''}</div>`;
-        });
-        msgDiv.scrollTop = msgDiv.scrollHeight;
-    }
-
-    async function sendCustomerMessage() {
-        const name = localStorage.getItem('cust_name');
-        const phone = localStorage.getItem('cust_phone');
-        const text = document.getElementById('customerChatInput').value.trim();
-        if(!text) return;
-        document.getElementById('customerChatInput').value = '';
-
-        await db.from('chat_messages').insert([{ customer_phone: phone, customer_name: name, sender: 'customer', message: text }]);
-        loadCustomerMessages(phone);
-    }
-
-    async function sendCustomerChatImage(input) {
-        const name = localStorage.getItem('cust_name');
-        const phone = localStorage.getItem('cust_phone');
-        if(input.files.length === 0) return;
-        const file = input.files[0];
-        const fileName = `chat_${Date.now()}.${file.name.split('.').pop()}`;
-        const { error: upErr } = await db.storage.from('product-images').upload(fileName, file);
-        if(upErr) return;
-        const { data: urlD } = db.storage.from('product-images').getPublicUrl(fileName);
-
-        await db.from('chat_messages').insert([{ customer_phone: phone, customer_name: name, sender: 'customer', message: '[ส่งรูปภาพ]', image_url: urlD.publicUrl }]);
-        loadCustomerMessages(phone);
-        input.value = '';
-    }
-
-    function handleCustomerChatKey(e) { if(e.key === 'Enter') sendCustomerMessage(); }
-    
-    function initCustomerRealtime(phone) {
-        db.channel('cust-chat-' + phone).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `customer_phone=eq.${phone}` }, () => { loadCustomerMessages(phone); }).subscribe();
+    function closeContactModal() {
+        document.getElementById('contactModal').style.display = 'none';
     }
 
     checkUserSession();

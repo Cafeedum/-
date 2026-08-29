@@ -40,16 +40,6 @@
         .stat-card .value { font-size: 22px; font-weight: 600; color: #0f294d; }
         .stat-card .sub { font-size: 12px; color: #52c41a; margin-top: 5px; }
 
-        .storage-alert-box { background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 15px 20px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
-        .storage-alert-box h3 { color: #d46b08; font-size: 15px; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
-
-        .low-stock-alert-box { background: #fff2f0; border: 1px solid #ffa39e; border-radius: 8px; padding: 20px; margin-bottom: 25px; }
-        .low-stock-alert-box h3 { color: #cf1322; font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .low-stock-table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; border: 1px solid #ffccc7; }
-        .low-stock-table th { background: #fff1f0; color: #cf1322; padding: 10px; font-size: 13px; font-weight: 600; text-align: left; }
-        .low-stock-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid #fff1f0; color: #333; }
-        .badge-stock-alert { background: #ff4d4f; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-
         .admin-chat-container { display: grid; grid-template-columns: 280px 1fr; gap: 20px; height: 500px; }
         .chat-sidebar-pane { display: flex; flex-direction: column; border-right: 1px solid #eee; padding-right: 10px; gap: 10px; }
         .chat-search-input { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; outline: none; font-size: 13px; }
@@ -145,35 +135,6 @@
         </header>
 
         <div class="content">
-            <div class="storage-alert-box" id="storageAlertBox" style="display:none;">
-                <div>
-                    <h3><i class="fa-solid fa-triangle-exclamation"></i> แจ้งเตือน: พื้นที่เก็บข้อมูลใกล้เต็ม!</h3>
-                    <p style="font-size:12px; color:#666;" id="storageAlertText">ตรวจพบข้อมูลสะสมจำนวนมาก แนะนำให้ Export ข้อมูล 3 เดือนแรกเก็บไว้</p>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-small" style="background:#faad14;" onclick="exportOldest3MonthsExcel()"><i class="fa-solid fa-file-excel"></i> โหลด Excel</button>
-                    <button class="btn-small" style="background:#ff4d4f;" onclick="clearOldest3MonthsData()"><i class="fa-solid fa-trash-can"></i> ลบ 3 เดือนแรก</button>
-                </div>
-            </div>
-
-            <div class="low-stock-alert-box" id="lowStockAlertBox" style="display:none;">
-                <h3><i class="fa-solid fa-triangle-exclamation"></i> แจ้งเตือนด่วน: อะไหล่ใกล้หมดสต็อก</h3>
-                <div class="table-responsive">
-                    <table class="low-stock-table">
-                        <thead>
-                            <tr>
-                                <th>ชื่ออะไหล่</th>
-                                <th>ประเภท</th>
-                                <th>ราคาขาย</th>
-                                <th style="text-align:center;">คงเหลือ</th>
-                                <th style="text-align:center;">จัดการสต็อก</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lowStockItemsList"></tbody>
-                    </table>
-                </div>
-            </div>
-
             <div id="sectionDashboard">
                 <div class="stats-grid">
                     <div class="stat-card"><h3>ยอดขายวันนี้</h3><div class="value" id="statDaySales">฿0</div><div class="sub" id="statDayProfit">กำไร: ฿0</div></div>
@@ -271,14 +232,7 @@
                         <textarea id="storeAddress" rows="2" placeholder="ที่อยู่ร้านช่างนวย"></textarea>
                     </div>
                 </div>
-                <button class="btn-primary" onclick="saveStoreSettings(this)" style="margin-bottom: 25px;">บันทึกการตั้งค่าร้านค้า</button>
-
-                <div class="card-header" style="border-top: 1px solid #eee; padding-top: 20px;"><i class="fa-solid fa-database"></i> จัดการข้อมูล (เคลียร์ 3 เดือนที่เก่าที่สุด)</div>
-                <p style="font-size: 12px; color: #666; margin-bottom: 15px;">เมื่อพื้นที่ใกล้เต็ม สามารถดาวน์โหลดข้อมูล 3 เดือนแรกออกเป็นไฟล์ Excel เก็บไว้ แล้วกดลบเฉพาะช่วงเวลานั้นทิ้งได้ครับ</p>
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <button class="btn-small" style="background: #faad14; padding: 10px 15px;" onclick="exportOldest3MonthsExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel (3 เดือนแรก)</button>
-                    <button class="btn-small" style="background: #ff4d4f; padding: 10px 15px;" onclick="clearOldest3MonthsData()"><i class="fa-solid fa-trash-can"></i> ลบ 3 เดือนแรกออกจากระบบ</button>
-                </div>
+                <button class="btn-primary" onclick="saveStoreSettings(this)">บันทึกการตั้งค่าร้านค้า</button>
             </div>
 
             <div class="card" id="sectionReports" style="display: none;">
@@ -305,7 +259,7 @@
                     <div class="input-group"><label>ราคาขายออก</label><input type="number" id="pPrice" placeholder="0.00"></div>
                     <div class="input-group"><label>สต็อกเริ่มต้น</label><input type="number" id="pStock" value="1"></div>
                     
-                   <div class="input-group"><label>📦 ค่าจัดส่งสำหรับชิ้นนี้ (บาท)</label><input type="number" id="pShippingCost" value="0" placeholder="0"></div>
+                    <div class="input-group"><label>📦 ค่าจัดส่งสำหรับชิ้นนี้ (บาท)</label><input type="number" id="pShippingCost" value="0" placeholder="0"></div>
 
                     <div class="input-group">
                         <label>ประเภทสินค้าหลัก</label>
@@ -500,7 +454,7 @@
 
         try {
             const newStock = prod.stock - qty;
-            const { error: stockErr } = await db.from('products').update({ stock: newStock, updated_at: new Date() }).eq('id', prod.id);
+            const { error: stockErr } = await db.from('products').update({ stock: newStock }).eq('id', prod.id);
             if(stockErr) throw stockErr;
 
             const cost = prod.cost_price || 0;
@@ -703,84 +657,6 @@
         if(e.key === 'Enter') sendAdminMessage();
     }
 
-    async function checkDatabaseCapacity() {
-        const { count: chatCount } = await db.from('chat_messages').select('*', { count: 'exact', head: true });
-        const { count: salesCount } = await db.from('sales_history').select('*', { count: 'exact', head: true });
-        const { count: orderCount } = await db.from('orders').select('*', { count: 'exact', head: true });
-
-        const totalRows = (chatCount || 0) + (salesCount || 0) + (orderCount || 0);
-        const alertBox = document.getElementById('storageAlertBox');
-
-        if (totalRows >= 1000) {
-            alertBox.style.display = 'flex';
-            document.getElementById('storageAlertText').innerText = `ตรวจพบข้อมูลสะสมรวม ${totalRows} รายการ แนะนำให้ Export ข้อมูล 3 เดือนแรกเก็บไว้`;
-        } else {
-            alertBox.style.display = 'none';
-        }
-    }
-
-    async function getOldest3MonthsRange() {
-        const { data: oldestSale } = await db.from('sales_history').select('created_at').order('created_at', { ascending: true }).limit(1);
-        const { data: oldestChat } = await db.from('chat_messages').select('created_at').order('created_at', { ascending: true }).limit(1);
-        const { data: oldestOrder } = await db.from('orders').select('created_at').order('created_at', { ascending: true }).limit(1);
-
-        let dates = [];
-        if (oldestSale && oldestSale.length > 0) dates.push(new Date(oldestSale[0].created_at));
-        if (oldestChat && oldestChat.length > 0) dates.push(new Date(oldestChat[0].created_at));
-        if (oldestOrder && oldestOrder.length > 0) dates.push(new Date(oldestOrder[0].created_at));
-
-        if (dates.length === 0) return null;
-
-        let minDate = new Date(Math.min(...dates));
-        let maxDate = new Date(minDate);
-        maxDate.setMonth(maxDate.getMonth() + 3);
-
-        return { start: minDate.toISOString(), end: maxDate.toISOString() };
-    }
-
-    async function exportOldest3MonthsExcel() {
-        const range = await getOldest3MonthsRange();
-        if (!range) { showToast('⚠️ ไม่พบข้อมูลในระบบครับ'); return; }
-
-        const { data: oldSales } = await db.from('sales_history').select('*').gte('created_at', range.start).lte('created_at', range.end);
-        const { data: oldChats } = await db.from('chat_messages').select('*').gte('created_at', range.start).lte('created_at', range.end);
-        const { data: oldOrders } = await db.from('orders').select('*').gte('created_at', range.start).lte('created_at', range.end);
-
-        let csvContent = "\uFEFF";
-        csvContent += `=== ข้อมูล 3 เดือนแรก (${new Date(range.start).toLocaleDateString('th-TH')} ถึง ${new Date(range.end).toLocaleDateString('th-TH')}) ===\n\n`;
-        
-        csvContent += "--- รายงานยอดขาย ---\nID,วันที่,ชื่อสินค้า,จำนวน,ทุน,ราคาขาย,กำไร\n";
-        if (oldSales) { oldSales.forEach(s => { csvContent += `"${s.id}","${s.created_at}","${s.product_name}",${s.quantity},${s.buy_price},${s.sell_price},${s.total_profit}\n`; }); }
-
-        csvContent += "\n--- ออเดอร์ลูกค้า ---\nID,วันที่,ชื่อลูกค้า,เบอร์โทร,ที่อยู่,ยอดรวม,สถานะ\n";
-        if (oldOrders) { oldOrders.forEach(o => { const addr = (o.address || '').replace(/"/g, '""'); csvContent += `"${o.id}","${o.created_at}","${o.customer_name}","${o.customer_phone}","${addr}",${o.total_price},"${o.status}"\n`; }); }
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `oldest_3_months_backup_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        showToast('🎉 ดาวน์โหลดไฟล์ Excel สำเร็จเรียบร้อย!');
-    }
-
-    async function clearOldest3MonthsData() {
-        const range = await getOldest3MonthsRange();
-        if (!range) { showToast('⚠️ ไม่พบข้อมูลเก่าให้ลบครับ'); return; }
-
-        if (!confirm(`⚠️ คำเตือน: คุณต้องการลบข้อมูลในช่วง 3 เดือนแรกออกจากระบบถาวรใช่หรือไม่?`)) return;
-
-        try {
-            await db.from('chat_messages').delete().gte('created_at', range.start).lte('created_at', range.end);
-            await db.from('sales_history').delete().gte('created_at', range.start).lte('created_at', range.end);
-            await db.from('orders').delete().gte('created_at', range.start).lte('created_at', range.end);
-
-            showToast('🧹 ลบข้อมูล 3 เดือนแรกเรียบร้อย!');
-            checkDatabaseCapacity();
-            loadReportsAndOrders();
-        } catch (err) { showToast('⚠️ เกิดข้อผิดพลาด: ' + err.message); }
-    }
-
     async function loadStoreSettingsAdmin() {
         const { data } = await db.from('store_settings').select('*').eq('id', 1).single();
         if (data) {
@@ -937,7 +813,7 @@
                     <td><span style="background:#f6ffed; color:#52c41a; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:500;">${p.sub_category || 'ทั่วไป'}</span></td>
                     <td style="color:#888;">฿${(p.cost_price || 0).toLocaleString()}</td>
                     <td style="color:#ff4d4f; font-weight:500;">฿${p.price.toLocaleString()}</td>
-                    <td style="color:#555; font-weight:500;">฿${(p.shipping_cost || 50).toLocaleString()}</td>
+                    <td style="color:#555; font-weight:500;">฿${(p.shipping_cost || 0).toLocaleString()}</td>
                     <td><input type="number" id="stock-input-${p.id}" class="stock-input-edit" value="${p.stock}" onchange="updateStockDirect('${p.id}', this.value)"></td>
                     <td>
                         <div style="display:flex; gap:5px;">
@@ -958,7 +834,7 @@
         document.getElementById('pCostPrice').value = prod.cost_price || 0;
         document.getElementById('pPrice').value = prod.price || 0;
         document.getElementById('pStock').value = prod.stock || 0;
-        document.getElementById('pShippingCost').value = prod.shipping_cost || 50;
+        document.getElementById('pShippingCost').value = prod.shipping_cost !== undefined ? prod.shipping_cost : 0;
         document.getElementById('pCond').value = prod.condition || 'อะไหล่มือ 1';
         document.getElementById('pSubCategory').value = prod.sub_category || 'ทั่วไป';
 
@@ -971,11 +847,9 @@
         document.getElementById('saveProductBtn').innerText = 'บันทึกการแก้ไขสินค้า';
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
 
-        // 1. สลับหน้ากลับไปที่แดชบอร์ด (เพื่อโชว์ฟอร์มแก้ไขที่ซ่อนอยู่)
         const dashboardBtn = document.querySelectorAll('.sidebar .menu-item')[0];
         switchTab('dashboard', dashboardBtn);
 
-        // 2. เลื่อนหน้าจอไปที่ฟอร์ม และทำไฮไลท์กระพริบให้เห็นชัดๆ
         setTimeout(() => {
             const formSection = document.getElementById('sectionAddProduct');
             window.scrollTo({ top: formSection.offsetTop - 80, behavior: 'smooth' });
@@ -995,7 +869,7 @@
         document.getElementById('pName').value = '';
         document.getElementById('pCostPrice').value = '';
         document.getElementById('pPrice').value = '';
-        document.getElementById('pShippingCost').value = '50';
+        document.getElementById('pShippingCost').value = '0';
         document.getElementById('pStock').value = '1';
         document.getElementById('pImage').value = '';
         document.getElementById('formHeaderTitle').innerHTML = `<i class="fa-solid fa-plus-circle"></i> เพิ่มสินค้า / รถมอเตอร์ไซค์ใหม่`;
@@ -1068,7 +942,7 @@
         const name = document.getElementById('pName').value.trim();
         const costPrice = document.getElementById('pCostPrice').value || 0;
         const price = document.getElementById('pPrice').value;
-        const shippingCost = document.getElementById('pShippingCost').value || 50;
+        const shippingCost = document.getElementById('pShippingCost').value || 0;
         const stock = document.getElementById('pStock').value;
         const cond = document.getElementById('pCond').value;
         const subCategory = document.getElementById('pSubCategory').value;
@@ -1104,8 +978,7 @@
                     stock: parseInt(stock),
                     condition: cond,
                     sub_category: subCategory,
-                    details: detailsVal,
-                    updated_at: new Date()
+                    details: detailsVal
                 };
                 if(finalImageUrl) {
                     updateData.image_url = finalImageUrl;
@@ -1142,7 +1015,7 @@
                 document.getElementById('pName').value = '';
                 document.getElementById('pCostPrice').value = '';
                 document.getElementById('pPrice').value = '';
-                document.getElementById('pShippingCost').value = '50';
+                document.getElementById('pShippingCost').value = '0';
                 document.getElementById('pImage').value = '';
             }
 
@@ -1162,7 +1035,6 @@
 
     loadReportsAndOrders(); 
     loadStock();
-    checkDatabaseCapacity();
     initAdminRealtimeChat();
     loadStoreSettingsAdmin();
 </script>

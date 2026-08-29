@@ -360,21 +360,16 @@
         if(phone.length < 10) { showToast('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง 10 หลัก'); return; }
 
         showToast('⏳ กำลังตรวจสอบข้อมูล...');
-        let foundName = null;
-        const { data: ordData } = await db.from('orders').select('customer_name').eq('customer_phone', phone).limit(1);
-        if(ordData && ordData.length > 0) foundName = ordData[0].customer_name;
+        
+        // ค้นหาจากตาราง customers ใน Supabase โดยตรง
+        const { data, error } = await db.from('customers').select('*').eq('phone', phone).single();
 
-        if(!foundName) {
-            const { data: chatData } = await db.from('chat_messages').select('customer_name').eq('customer_phone', phone).limit(1);
-            if(chatData && chatData.length > 0 && chatData[0].customer_name !== 'ลูกค้า') foundName = chatData[0].customer_name;
-        }
-
-        if(foundName) {
-            localStorage.setItem('cust_name', foundName);
-            localStorage.setItem('cust_phone', phone);
+        if(data) {
+            localStorage.setItem('cust_name', data.name);
+            localStorage.setItem('cust_phone', data.phone);
             closeAuthModal();
             checkUserSession();
-            showToast(`🎉 ยินดีต้อนรับกลับมาครับ คุณ${foundName}`);
+            showToast(`🎉 ยินดีต้อนรับกลับมาครับ คุณ${data.name}`);
         } else {
             showToast('⚠️ ไม่พบเบอร์นี้ในระบบ กรุณาลงทะเบียนก่อนครับ');
             switchAuthTab('register');
@@ -382,10 +377,22 @@
         }
     }
 
-    function processRegister() {
+    async function processRegister() {
         const name = document.getElementById('regNameInput').value.trim();
         const phone = document.getElementById('regPhoneInput').value.trim();
         if(!name || phone.length < 10) { showToast('⚠️ กรุณากรอกชื่อและเบอร์โทร 10 หลักให้ครบถ้วน'); return; }
+
+        showToast('⏳ กำลังบันทึกข้อมูลการลงทะเบียน...');
+
+        // บันทึกข้อมูลลงตาราง customers ใน Supabase (ใช้ upsert เพื่อป้องกันกรณีเบอร์ซ้ำแล้วพัง)
+        const { error } = await db.from('customers').upsert([
+            { phone: phone, name: name }
+        ], { onConflict: 'phone' });
+
+        if(error) {
+            showToast('⚠️ เกิดข้อผิดพลาด: ' + error.message);
+            return;
+        }
 
         localStorage.setItem('cust_name', name);
         localStorage.setItem('cust_phone', phone);

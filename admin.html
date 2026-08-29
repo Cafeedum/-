@@ -31,7 +31,7 @@
         .page-title { font-size: 18px; font-weight: 600; color: #0f294d; }
         
         .content { padding: 20px; }
-        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid #eee; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid #eee; transition: 0.3s; }
         .card-header { font-size: 16px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; color: #0f294d; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
@@ -295,6 +295,7 @@
                 </div>
             </div>
 
+            <!-- ฟอร์มเพิ่ม/แก้ไข สินค้า -->
             <div class="card" id="sectionAddProduct">
                 <div class="card-header" id="formHeaderTitle"><i class="fa-solid fa-plus-circle"></i> เพิ่มสินค้า / รถมอเตอร์ไซค์ใหม่</div>
                 <input type="hidden" id="editProductId" value="">
@@ -966,11 +967,27 @@
             document.getElementById('pRegistration').value = prod.details;
         }
 
-        document.getElementById('formHeaderTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลสินค้า: ${prod.name}`;
+        document.getElementById('formHeaderTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลสินค้า: <span style="color:#3264ff;">${prod.name}</span>`;
         document.getElementById('saveProductBtn').innerText = 'บันทึกการแก้ไขสินค้า';
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
 
-        window.scrollTo({ top: document.getElementById('sectionAddProduct').offsetTop - 20, behavior: 'smooth' });
+        // 1. สลับหน้ากลับไปที่แดชบอร์ด (เพื่อโชว์ฟอร์มแก้ไขที่ซ่อนอยู่)
+        const dashboardBtn = document.querySelectorAll('.sidebar .menu-item')[0];
+        switchTab('dashboard', dashboardBtn);
+
+        // 2. เลื่อนหน้าจอไปที่ฟอร์ม และทำไฮไลท์กระพริบให้เห็นชัดๆ
+        setTimeout(() => {
+            const formSection = document.getElementById('sectionAddProduct');
+            window.scrollTo({ top: formSection.offsetTop - 80, behavior: 'smooth' });
+            
+            formSection.style.boxShadow = "0 0 20px rgba(50, 100, 255, 0.6)";
+            formSection.style.border = "2px solid #3264ff";
+            
+            setTimeout(() => { 
+                formSection.style.boxShadow = "0 2px 10px rgba(0,0,0,0.03)"; 
+                formSection.style.border = "1px solid #eee";
+            }, 1500);
+        }, 100);
     }
 
     function cancelEditMode() {
